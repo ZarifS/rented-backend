@@ -38,4 +38,15 @@ app.get("/api/signInUser", (req, res) => {
   })
 })
 
+app.get("/api/currentUser", (req, res) => {
+  var user = auth.currentUser;
+  if (user) {
+    res.send({user});
+  } else {
+    res
+      .status(404)
+      .send({error: 'No current user.'})
+  }
+})
+
 app.listen(port, () => console.log(`Listening on port ${port}`));
