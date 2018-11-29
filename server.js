@@ -1,52 +1,73 @@
-const express = require("express");
-const firebase = require("firebase");
-const app = express();
-const port = process.env.PORT || 8000;
+const express = require("express")
+const bodyParser = require('body-parser');
+const admin = require("firebase-admin")
+const serviceAccount = require('./secret-keys/rented-project-key.json');
+const app = express()
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json())
+const port = process.env.PORT || 8000
 
-//Init Firebase
-var config = {
-  apiKey: "AIzaSyBag4e7WLKhjPvZn6Sjvy3Qf7tmse5cRdQ",
-  authDomain: "rented-project.firebaseapp.com",
-  databaseURL: "https://rented-project.firebaseio.com",
-  projectId: "rented-project",
-  storageBucket: "rented-project.appspot.com",
-  messagingSenderId: "426485648453"
-};
-firebase.initializeApp(config);
-const auth = firebase.auth()
+//Init Firebase ADMIN SDK
+admin.initializeApp({
+  credential: admin
+    .credential
+    .cert(serviceAccount),
+  databaseURL: 'https://rented-project.firebaseio.com'
+});
+const db = admin.firestore()
+const auth = admin.auth()
 
-// API Routes
-app.post("/api/createUser", (req, res, next) => {
-  const promise = auth.createUserWithEmailAndPassword(req.query.email, req.query.password);
-  promise.then(user => {
-    res.send({user});
-  }).catch(e => {
-    res
-      .status(400)
-      .send({error: e})
-  })
+// Create User gets a email and password from the client and creates a firebase
+// auth user. It then maps this user to the firestore users collection
+app.post('/api/createUser', (req, res) => {
+  auth
+    .createUser(req.body)
+    .then((userRecord) => {
+      addUserToDB(req.body, userRecord.uid)
+      res.send({uid: userRecord.uid})
+    })
+    .catch((e) => {
+      res
+        .status(400)
+        .send({error: e.message})
+    })
 });
 
-app.get("/api/signInUser", (req, res) => {
-  const promise = auth.signInWithEmailAndPassword(req.query.email, req.query.password);
-  promise.then(user => {
-    res.send({user});
-  }).catch(e => {
-    res
-      .status(403)
-      .send({error: e})
-  })
+// Updates a user given a uid. The way the update works is it either adds new
+// fields, or updates existing ones. Hence a patch.
+app.patch('/api/updateUser/:uid', (req, res) => {
+  const uid = req.params.uid;
+  console.log(uid)
+  const ref = db
+    .collection('users')
+    .doc(uid)
+  const userData = req.body;
+  console.log(userData)
+  ref
+    .update(userData)
+    .then(() => {
+      res.send({message: 'Updated User!'})
+    })
+    .catch((e) => {
+      res
+        .status(400)
+        .send({error: e.message})
+    })
 })
 
-app.get("/api/currentUser", (req, res) => {
-  var user = auth.currentUser;
-  if (user) {
-    res.send({user});
-  } else {
-    res
-      .status(404)
-      .send({error: 'No current user.'})
-  }
-})
+// Adds user to the firestore DB, seperate from the auth users firebase has.
+// These users will have all our info needed.
+function addUserToDB(user, uid) {
+  //don't store their password
+  delete user.password
+  db
+    .collection('users')
+    .doc(uid)
+    .set(user)
+    .catch((e) => {
+      //Handle Error
+      console.log(e.message)
+    });
+}
 
-app.listen(port, () => console.log(`Listening on port ${port}`));
+app.listen(port, () => console.log(`Listening on port ${port}`))
