@@ -70,4 +70,42 @@ function addUserToDB(user, uid) {
     });
 }
 
+app.post('api/addProperty', (req, res) => {
+  db.collection('properties').add({
+    title: req.body.title,
+    address: req.body.address,
+    bathrooms: req.body.bathrooms,
+    bedrooms: req.body.bedrooms,
+    location: req.body.location,
+    other: req.body.other,
+    rent: req.body.rent,
+    type:req.body.type
+  }).then(function(docRef) {
+    console.log("Document written with ID: ", docRef.id);
+    res.send(docRef.id)
+  })
+  .catch(function(error) {
+    console.error("Error adding document: ", error);
+  });
+})
+
+function addProperty(title, address, bathrooms, bedrooms, location, other, rent, type){
+  db.collection('properties').add({
+    title: title,
+    address: address,
+    bathrooms: bathrooms,
+    bedrooms: bedrooms,
+    location: location,
+    other: other,
+    rent: rent,
+    type:type
+  }).then(function(docRef) {
+    console.log("Document written with ID: ", docRef.id);
+  })
+  .catch(function(error) {
+    console.error("Error adding document: ", error);
+  });
+}
+
+
 app.listen(port, () => console.log(`Listening on port ${port}`))
