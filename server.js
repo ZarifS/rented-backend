@@ -87,12 +87,4 @@ function addUserToDB(user, uid) {
     });
 }
 
-// function addProperty(title, address, bathrooms, bedrooms, location, other,
-// rent, type) {   db     .collection('properties')     .add({       title:
-// title,       address: address,       bathrooms: bathrooms,       bedrooms:
-// bedrooms,       location: location,       other: other,       rent: rent,
-// type: type     })     .then(function (docRef) {       console.log("Document
-// written with ID: ", docRef.id);     })     .catch(function (error) {
-// console.error("Error adding document: ", error);     }); }
-
 app.listen(port, () => console.log(`Listening on port ${port}`))
