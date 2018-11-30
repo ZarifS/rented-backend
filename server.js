@@ -3,9 +3,9 @@ const bodyParser = require('body-parser');
 const admin = require("firebase-admin")
 const serviceAccount = require('./secret-keys/rented-project-key.json');
 const app = express()
+const port = process.env.PORT || 8000
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json())
-const port = process.env.PORT || 8000
 
 //Init Firebase ADMIN SDK
 admin.initializeApp({
@@ -37,15 +37,14 @@ app.post('/api/createUser', (req, res) => {
     })
 });
 
-// Updates a user given a uid. The way the update works is it either adds new
-// fields, or updates existing ones. Hence a patch.
+//Update a user by id
 app.patch('/api/updateUser/:uid', (req, res) => {
-  const uid = req.params.uid;
+  let uid = req.params.uid;
   console.log(uid)
-  const ref = db
+  let ref = db
     .collection('users')
     .doc(uid)
-  const userData = req.body;
+  let userData = req.body;
   console.log(userData)
   ref
     .update(userData)
@@ -59,6 +58,7 @@ app.patch('/api/updateUser/:uid', (req, res) => {
     })
 })
 
+//Add a new listing, body should include owner id
 app.post('/api/addListing', (req, res) => {
   db
     .collection('listings')
@@ -69,6 +69,76 @@ app.post('/api/addListing', (req, res) => {
     })
     .catch(function (error) {
       console.error("Error adding document: ", error);
+    });
+})
+
+// Get all listings -> probably need to add a filter for location or something
+// later
+app.get('/api/getListings', (req, res) => {
+  let listingsRef = db.collection('listings');
+  let allListings = {}
+  listingsRef
+    .get()
+    .then(snapshot => {
+      snapshot.forEach(doc => {
+        let id = doc.id
+        let data = doc.data()
+        allListings[id] = data
+      });
+      res.send(allListings)
+    })
+})
+
+//Get listing by listing id
+app.get('/api/getListing/:listing_id', (req, res) => {
+  const id = req.params.listing_id;
+  let ref = db
+    .collection('listings')
+    .doc(id)
+  ref
+    .get()
+    .then(doc => {
+      if (!doc.exists) {
+        res
+          .status(404)
+          .send({error: 'No such listing.'});
+      } else {
+        let id = doc.id
+        let data = {}
+        data[id] = doc.data()
+        res.send(data)
+      }
+    })
+    .catch(err => {
+      res
+        .status(404)
+        .send({error: err.message})
+    });
+})
+
+//Get listings belonging to a user (owner)
+app.get('/api/getListings/:uid', (res, req) => {
+  const uid = req.params.uid;
+  let ref = db.collection('listings')
+  ref
+    .where('owner_id', '==', uid)
+    .get()
+    .then(doc => {
+      if (!doc.exists) {
+        res
+          .status(404)
+          .send({error: 'No such listing.'});
+      } else {
+        let id = doc.id
+        let data = {}
+        data[id] = doc.data()
+        res.send(data)
+      }
+    })
+    .catch(err => {
+      res
+        .status(404)
+        .send({error: err.message})
     });
 })
 
