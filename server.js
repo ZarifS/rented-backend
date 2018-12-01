@@ -226,7 +226,7 @@ app.get('/api/getVisitingList/:uid', (req, res) => {
     });
 });
 
-app.post("/api/addToVisitingListing", (req, res) => {
+app.post("/api/addToVisitingList", (req, res) => {
   db
     .collection("visits")
     .add(req.body)
