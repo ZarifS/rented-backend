@@ -169,7 +169,7 @@ app.patch('/api/updateListing/:listing_id', (req, res) => {
   ref
     .update(updateData)
     .then(() => {
-      res.send({message: 'Updated Listing!'})
+      res.send({message: 'Updated Listing with: '+ updateData})
     })
     .catch((e) => {
       res
