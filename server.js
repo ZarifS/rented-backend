@@ -241,4 +241,18 @@ app.post("/api/addToVisitingListing", (req, res) => {
     });
 });
 
+app.delete("/api/deleteListing/:listing_id", (req, res) => {
+  const deleteListing = req.params.listing_id
+  db
+    .collection("listings")
+    .doc(deleteListing).delete()
+    .then(function (docRef) {
+      console.log("Property with id "+ deleteListing+ " successfully deleted");
+      res.send("Property with id "+ deleteListing+ " successfully deleted");
+    })
+    .catch(function (error) {
+      console.error("Error deleting listing: ", error);
+    });
+});
+
 app.listen(port, () => console.log(`Listening on port ${port}`));
