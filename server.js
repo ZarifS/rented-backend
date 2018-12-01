@@ -57,7 +57,7 @@ app.get("/api/getUser/:uid", (req, res) => {
 //Get user by email and password
 app.get("/api/getUser/:email/:password", (req, res) => {
   const { email, password } = req.params;
-  db.collection(USERS);
+  //TODO: implement db.collection(USERS);
 });
 
 //Update a user by id
@@ -162,25 +162,21 @@ function addUserToDB(user, uid) {
     });
 }
 //if the owner_id is equal to the current user_id then show update listing button
-//should be done on the front end. 
-app.patch('/api/updateListing/:listing_id', (req, res) => {
+//should be done on the front end.
+app.patch("/api/updateListing/:listing_id", (req, res) => {
   let listingID = req.params.listing_id;
-  console.log(listingID)
-  let ref = db
-    .collection('listings')
-    .doc(listingID)
+  console.log(listingID);
+  let ref = db.collection("listings").doc(listingID);
   let updateData = req.body;
-  console.log(updateData)
+  console.log(updateData);
   ref
     .update(updateData)
     .then(() => {
-      res.send({message: 'Updated Listing with: '+ updateData})
+      res.send({ message: "Updated Listing with: " + updateData });
     })
-    .catch((e) => {
-      res
-        .status(400)
-        .send({error: e.message})
-    })
-})
+    .catch(e => {
+      res.status(400).send({ error: e.message });
+    });
+});
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
