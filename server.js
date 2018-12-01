@@ -156,5 +156,26 @@ function addUserToDB(user, uid) {
       console.log(e.message)
     });
 }
+//if the owner_id is equal to the current user_id then show update listing button
+//should be done on the front end. 
+app.patch('/api/updateListing/:listing_id', (req, res) => {
+  let listingID = req.params.listing_id;
+  console.log(listingID)
+  let ref = db
+    .collection('listings')
+    .doc(listingID)
+  let updateData = req.body;
+  console.log(updateData)
+  ref
+    .update(updateData)
+    .then(() => {
+      res.send({message: 'Updated Listing!'})
+    })
+    .catch((e) => {
+      res
+        .status(400)
+        .send({error: e.message})
+    })
+})
 
 app.listen(port, () => console.log(`Listening on port ${port}`))
