@@ -51,7 +51,7 @@ app.get("/api/getUser/:uid", (req, res) => {
       if (!doc.exists) {
         res
           .status(404)
-          .send({error: "No such listing."});
+          .send({error: "No such user."});
       } else {
         res.send(doc.data());
       }
@@ -192,9 +192,7 @@ app.patch("/api/updateListing/:listing_id", (req, res) => {
   ref
     .update(updateData)
     .then(() => {
-      res.send({
-        message: "Updated Listing with: " + updateData
-      });
+      res.send({message: "Updated Listing!"});
     })
     .catch(e => {
       res
@@ -228,7 +226,7 @@ app.get('/api/getVisitingList/:uid', (req, res) => {
     });
 });
 
-app.post("/api/addToVisitingListing", (req, res) => {
+app.post("/api/addToVisitingList", (req, res) => {
   db
     .collection("visits")
     .add(req.body)
