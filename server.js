@@ -51,7 +51,7 @@ app.get("/api/getUser/:uid", (req, res) => {
       if (!doc.exists) {
         res
           .status(404)
-          .send({error: "No such listing."});
+          .send({error: "No such user."});
       } else {
         res.send(doc.data());
       }
@@ -61,12 +61,6 @@ app.get("/api/getUser/:uid", (req, res) => {
         .status(404)
         .send({error: err.message});
     });
-});
-
-//Get user by email and password
-app.get("/api/getUser/:email/:password", (req, res) => {
-  const {email, password} = req.params;
-  //TODO: implement db.collection(USERS);
 });
 
 //Update a user by id
@@ -198,9 +192,7 @@ app.patch("/api/updateListing/:listing_id", (req, res) => {
   ref
     .update(updateData)
     .then(() => {
-      res.send({
-        message: "Updated Listing with: " + updateData
-      });
+      res.send({message: "Updated Listing!"});
     })
     .catch(e => {
       res
