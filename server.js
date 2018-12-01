@@ -89,25 +89,21 @@ app.get('/api/getListings', (req, res) => {
     })
 })
 
-//Get listing by listing id
-app.get('/api/getListing/:listing_id', (req, res) => {
-  const id = req.params.listing_id;
-  let ref = db
-    .collection('listings')
-    .doc(id)
+//Get listings belonging to a user (owner)
+app.get('/api/getListings/:uid', (req, res) => {
+  const uid = req.params.uid
+  let allListings = {}
+  let ref = db.collection('listings')
   ref
+    .where('owner_uid', '==', uid)
     .get()
-    .then(doc => {
-      if (!doc.exists) {
-        res
-          .status(404)
-          .send({error: 'No such listing.'});
-      } else {
+    .then(snapshot => {
+      snapshot.forEach(doc => {
         let id = doc.id
-        let data = {}
-        data[id] = doc.data()
-        res.send(data)
-      }
+        let data = doc.data()
+        allListings[id] = data
+      });
+      res.send(allListings)
     })
     .catch(err => {
       res
@@ -116,12 +112,13 @@ app.get('/api/getListing/:listing_id', (req, res) => {
     });
 })
 
-//Get listings belonging to a user (owner)
-app.get('/api/getListings/:uid', (res, req) => {
-  const uid = req.params.uid;
-  let ref = db.collection('listings')
+//Get listing by listing id
+app.get('/api/getListing/:listing_id', (req, res) => {
+  const id = req.params.listing_id;
+  let ref = db
+    .collection('listings')
+    .doc(id)
   ref
-    .where('owner_id', '==', uid)
     .get()
     .then(doc => {
       if (!doc.exists) {
