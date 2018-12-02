@@ -4,16 +4,17 @@ const admin = require("firebase-admin");
 const serviceAccount = require("./secret-keys/rented-project-key.json");
 const app = express();
 const port = process.env.PORT || 8000;
-app.use(bodyParser.urlencoded({extended: false}));
+const cors = require("cors");
+
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 const USERS = "users";
 
 //Init Firebase ADMIN SDK
 admin.initializeApp({
-  credential: admin
-    .credential
-    .cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://rented-project.firebaseio.com"
 });
 const db = admin.firestore();
@@ -31,41 +32,34 @@ app.post("/api/createUser", (req, res) => {
     .createUser(req.body)
     .then(userRecord => {
       addUserToDB(req.body, userRecord.uid);
-      res.send({uid: userRecord.uid});
+      res.send({ uid: userRecord.uid });
     })
     .catch(e => {
-      res
-        .status(400)
-        .send({error: e.message});
+      res.status(400).send({ error: e.message });
     });
 });
 
 //Get user by uid
 app.get("/api/getUser/:uid", (req, res) => {
   const uid = req.params.uid;
-  db
-    .collection(USERS)
+  db.collection(USERS)
     .doc(uid)
     .get()
     .then(doc => {
       if (!doc.exists) {
-        res
-          .status(404)
-          .send({error: "No such listing."});
+        res.status(404).send({ error: "No such listing." });
       } else {
         res.send(doc.data());
       }
     })
     .catch(err => {
-      res
-        .status(404)
-        .send({error: err.message});
+      res.status(404).send({ error: err.message });
     });
 });
 
 //Get user by email and password
 app.get("/api/getUser/:email/:password", (req, res) => {
-  const {email, password} = req.params;
+  const { email, password } = req.params;
   //TODO: implement db.collection(USERS);
 });
 
@@ -73,33 +67,28 @@ app.get("/api/getUser/:email/:password", (req, res) => {
 app.patch("/api/updateUser/:uid", (req, res) => {
   let uid = req.params.uid;
   console.log(uid);
-  let ref = db
-    .collection("users")
-    .doc(uid);
+  let ref = db.collection("users").doc(uid);
   let userData = req.body;
   console.log(userData);
   ref
     .update(userData)
     .then(() => {
-      res.send({message: "Updated User!"});
+      res.send({ message: "Updated User!" });
     })
     .catch(e => {
-      res
-        .status(400)
-        .send({error: e.message});
+      res.status(400).send({ error: e.message });
     });
 });
 
 //Add a new listing, body should include owner id
 app.post("/api/addListing", (req, res) => {
-  db
-    .collection("listings")
+  db.collection("listings")
     .add(req.body)
-    .then(function (docRef) {
+    .then(function(docRef) {
       console.log("Document written with ID: ", docRef.id);
       res.send(docRef.id);
     })
-    .catch(function (error) {
+    .catch(function(error) {
       console.error("Error adding document: ", error);
     });
 });
@@ -109,7 +98,23 @@ app.post("/api/addListing", (req, res) => {
 app.get("/api/getListings", (req, res) => {
   let listingsRef = db.collection("listings");
   let allListings = {};
-  listingsRef
+  listingsRef.get().then(snapshot => {
+    snapshot.forEach(doc => {
+      let id = doc.id;
+      let data = doc.data();
+      allListings[id] = data;
+    });
+    res.send(allListings);
+  });
+});
+
+//Get listings belonging to a user (owner)
+app.get("/api/getListings/:uid", (req, res) => {
+  const uid = req.params.uid;
+  let allListings = {};
+  let ref = db.collection("listings");
+  ref
+    .where("owner_uid", "==", uid)
     .get()
     .then(snapshot => {
       snapshot.forEach(doc => {
@@ -118,45 +123,21 @@ app.get("/api/getListings", (req, res) => {
         allListings[id] = data;
       });
       res.send(allListings);
-    });
-});
-
-//Get listings belonging to a user (owner)
-app.get('/api/getListings/:uid', (req, res) => {
-  const uid = req.params.uid
-  let allListings = {}
-  let ref = db.collection('listings')
-  ref
-    .where('owner_uid', '==', uid)
-    .get()
-    .then(snapshot => {
-      snapshot.forEach(doc => {
-        let id = doc.id
-        let data = doc.data()
-        allListings[id] = data
-      });
-      res.send(allListings)
     })
     .catch(err => {
-      res
-        .status(404)
-        .send({error: err.message});
+      res.status(404).send({ error: err.message });
     });
 });
 
 //Get listing by listing id
-app.get('/api/getListing/:listing_id', (req, res) => {
+app.get("/api/getListing/:listing_id", (req, res) => {
   const id = req.params.listing_id;
-  let ref = db
-    .collection('listings')
-    .doc(id)
+  let ref = db.collection("listings").doc(id);
   ref
     .get()
     .then(doc => {
       if (!doc.exists) {
-        res
-          .status(404)
-          .send({error: "No such listing."});
+        res.status(404).send({ error: "No such listing." });
       } else {
         let id = doc.id;
         let data = {};
@@ -165,9 +146,7 @@ app.get('/api/getListing/:listing_id', (req, res) => {
       }
     })
     .catch(err => {
-      res
-        .status(404)
-        .send({error: err.message});
+      res.status(404).send({ error: err.message });
     });
 });
 
@@ -176,8 +155,7 @@ app.get('/api/getListing/:listing_id', (req, res) => {
 function addUserToDB(user, uid) {
   //don't store their password
   delete user.password;
-  db
-    .collection("users")
+  db.collection("users")
     .doc(uid)
     .set(user)
     .catch(e => {
@@ -190,9 +168,7 @@ function addUserToDB(user, uid) {
 app.patch("/api/updateListing/:listing_id", (req, res) => {
   let listingID = req.params.listing_id;
   console.log(listingID);
-  let ref = db
-    .collection("listings")
-    .doc(listingID);
+  let ref = db.collection("listings").doc(listingID);
   let updateData = req.body;
   console.log(updateData);
   ref
@@ -203,9 +179,7 @@ app.patch("/api/updateListing/:listing_id", (req, res) => {
       });
     })
     .catch(e => {
-      res
-        .status(400)
-        .send({error: e.message});
+      res.status(400).send({ error: e.message });
     });
 });
 
