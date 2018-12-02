@@ -31,8 +31,8 @@ app.post("/api/createUser", (req, res) => {
   auth
     .createUser(req.body)
     .then(userRecord => {
-      addUserToDB(req.body, userRecord.uid);
-      res.send({ uid: userRecord.uid });
+      const { uid } = userRecord;
+      addUserToDB(req.body, uid, res);
     })
     .catch(e => {
       res.status(400).send({ error: e.message });
@@ -41,9 +41,11 @@ app.post("/api/createUser", (req, res) => {
 
 //Get user by uid
 app.get("/api/getUser/:uid", (req, res) => {
-  const uid = req.params.uid;
-  db.collection(USERS)
-    .doc(uid)
+  let uid = req.params.uid;
+  console.log(uid);
+  let ref = db.collection("users").doc(uid);
+
+  ref
     .get()
     .then(doc => {
       if (!doc.exists) {
@@ -146,12 +148,15 @@ app.get("/api/getListing/:listing_id", (req, res) => {
 
 // Adds user to the firestore DB, seperate from the auth users firebase has.
 // These users will have all our info needed.
-function addUserToDB(user, uid) {
+function addUserToDB(user, uid, res) {
   //don't store their password
   delete user.password;
   db.collection("users")
     .doc(uid)
     .set(user)
+    .then(() => {
+      res.send({ uid: uid });
+    })
     .catch(e => {
       //Handle Error
       console.log(e.message);
