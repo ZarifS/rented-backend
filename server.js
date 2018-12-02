@@ -47,7 +47,7 @@ app.get("/api/getUser/:uid", (req, res) => {
     .get()
     .then(doc => {
       if (!doc.exists) {
-        res.status(404).send({ error: "No such listing." });
+        res.status(404).send({ error: "No such user." });
       } else {
         res.send(doc.data());
       }
@@ -55,12 +55,6 @@ app.get("/api/getUser/:uid", (req, res) => {
     .catch(err => {
       res.status(404).send({ error: err.message });
     });
-});
-
-//Get user by email and password
-app.get("/api/getUser/:email/:password", (req, res) => {
-  const { email, password } = req.params;
-  //TODO: implement db.collection(USERS);
 });
 
 //Update a user by id
@@ -174,12 +168,61 @@ app.patch("/api/updateListing/:listing_id", (req, res) => {
   ref
     .update(updateData)
     .then(() => {
-      res.send({
-        message: "Updated Listing with: " + updateData
-      });
+      res.send({ message: "Updated Listing!" });
     })
     .catch(e => {
       res.status(400).send({ error: e.message });
+    });
+});
+// get visiting list for a given user_id passed in the parameter
+app.get("/api/getVisitingList/:uid", (req, res) => {
+  const uid = req.params.uid;
+  console.log(uid);
+  let allvisits = {};
+  let ref = db.collection("visits");
+  ref
+    .where("uid", "==", uid)
+    .get()
+    .then(snapshot => {
+      snapshot.forEach(doc => {
+        let id = doc.id;
+        console.log(id);
+        let data = doc.data();
+        console.log(doc.data());
+        allvisits[id] = data;
+      });
+      res.send(allvisits);
+    })
+    .catch(err => {
+      res.status(404).send({ error: err.message });
+    });
+});
+
+app.post("/api/addToVisitingList", (req, res) => {
+  db.collection("visits")
+    .add(req.body)
+    .then(function(docRef) {
+      console.log("Document written with ID: ", docRef.id);
+      res.send(docRef.id);
+    })
+    .catch(function(error) {
+      console.error("Error adding document: ", error);
+    });
+});
+
+app.delete("/api/deleteListing/:listing_id", (req, res) => {
+  const deleteListing = req.params.listing_id;
+  db.collection("listings")
+    .doc(deleteListing)
+    .delete()
+    .then(function(docRef) {
+      console.log(
+        "Property with id " + deleteListing + " successfully deleted"
+      );
+      res.send("Property with id " + deleteListing + " successfully deleted");
+    })
+    .catch(function(error) {
+      console.error("Error deleting listing: ", error);
     });
 });
 
