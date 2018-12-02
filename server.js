@@ -94,12 +94,12 @@ app.post("/api/addListing", (req, res) => {
 // later
 app.get("/api/getListings", (req, res) => {
   let listingsRef = db.collection("listings");
-  let allListings = {};
+  let allListings = [];
   listingsRef.get().then(snapshot => {
     snapshot.forEach(doc => {
       let id = doc.id;
       let data = doc.data();
-      allListings[id] = data;
+      allListings.push(data);
     });
     res.send(allListings);
   });
