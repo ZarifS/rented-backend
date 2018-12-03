@@ -188,10 +188,10 @@ app.patch("/api/updateListing/:listing_id", (req, res) => {
 app.get("/api/getVisitingList/:uid", (req, res) => {
   const uid = req.params.uid;
   console.log(uid);
-  let allvisits = {};
+  let allvisits = [];
   let ref = db.collection("visits");
   ref
-    .where("uid", "==", uid)
+    .where("user_id", "==", uid)
     .get()
     .then(snapshot => {
       snapshot.forEach(doc => {
@@ -199,7 +199,7 @@ app.get("/api/getVisitingList/:uid", (req, res) => {
         console.log(id);
         let data = doc.data();
         console.log(doc.data());
-        allvisits[id] = data;
+        allvisits.push(data);
       });
       res.send(allvisits);
     })
