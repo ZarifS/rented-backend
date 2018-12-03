@@ -141,9 +141,7 @@ app.get("/api/getListing/:listing_id", (req, res) => {
         res.status(404).send({ error: "No such listing." });
       } else {
         let id = doc.id;
-        let data = {};
-        data[id] = doc.data();
-        res.send(data);
+        res.send(doc.data());
       }
     })
     .catch(err => {
