@@ -79,6 +79,7 @@ app.patch("/api/updateUser/:uid", (req, res) => {
 //Add a new listing, body should include owner id
 app.post("/api/addListing", (req, res) => {
   console.log("add listing");
+  console.log("req.body: ");
   db.collection("listings")
     .add(req.body)
     .then(function(docRef) {
@@ -97,8 +98,9 @@ app.get("/api/getListings", (req, res) => {
   let allListings = [];
   listingsRef.get().then(snapshot => {
     snapshot.forEach(doc => {
-      let id = doc.id;
-      let data = doc.data();
+      let listing_id = doc.id;
+      let data = { ...doc.data() };
+      data["listing_id"] = listing_id;
       allListings.push(data);
     });
     res.send(allListings);
