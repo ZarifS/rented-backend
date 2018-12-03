@@ -118,8 +118,9 @@ app.get("/api/getListings/:uid", (req, res) => {
     .get()
     .then(snapshot => {
       snapshot.forEach(doc => {
-        let id = doc.id;
-        let data = doc.data();
+        let listing_id = doc.id;
+        let data = { ...doc.data() };
+        data["listing_id"] = listing_id;
         allListings.push(data);
       });
       res.send(allListings);
